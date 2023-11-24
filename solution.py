@@ -99,12 +99,14 @@ class SVM:
         # Scores de chaque classe
         scores = np.dot(x, self.w)
 
-        # Sélection de l'index de la classe ayant le score le plus élevé
+        # Sélection de l'index de la classe prédite ayant le score le plus élevé
         predicted_classes = np.argmax(scores, axis=1)
 
-        # Format en one-versus-all
+        # Initialisation d'une matrice de prédictions (-1 partout) avec la forme appropriée
         y_inferred = -np.ones((x.shape[0], self.m))
+
         for i in range(len(predicted_classes)):
+            #Mise à jour de la prédiction correspondante à la classe avec le score le plus élevé à 1.
             y_inferred[i, predicted_classes[i]] = 1
 
         return y_inferred
@@ -116,9 +118,7 @@ class SVM:
         returns : float
         """
 
-        correct_predictions = np.sum(np.all(y_inferred == y, axis=1))
-
-        accuracy = correct_predictions / len(y)
+        accuracy = np.mean(np.argmax(y_inferred, axis=1) == np.argmax(y, axis=1))
 
         return accuracy
 
