@@ -22,9 +22,8 @@ class SVM:
             array[i][y[i]] = 1
         return array
 
-
-#Pour resoudre compute_loss et compute_gradient, nous nous sommes inspirés de cette vidéo qui a été bénéfique dans notre 
-#Compréhension : https://www.youtube.com/watch?v=l2UizhILZsk
+    # Pour resoudre compute_loss et compute_gradient, nous nous sommes inspirés de cette vidéo qui a été bénéfique dans notre
+    # Compréhension : https://www.youtube.com/watch?v=l2UizhILZsk
 
     def compute_loss(self, x, y):
         """
@@ -32,29 +31,26 @@ class SVM:
         y : numpy array of shape (minibatch size,) or (minibatch size, num_classes)
         returns : float
         """
-        loss= 0
+        loss = 0
         if len(y.shape) == 1:
-            #Initialisation des paramètres
+            # Initialisation des paramètres
             self.m = np.max(y) + 1
             y = self.make_one_versus_all_labels(y, self.m)
             self.num_features = x.shape[1]
             self.w = np.zeros([self.num_features, self.m])
-        #calcule de hinge loss
+
+        # Calcul de hinge loss
         for i in range(len(x)):
-            for j in range(y.shape[1]): 
-                w= np.zeros(len(x[0]))
-                fonction_indicatrice = 1 if y[i, j] == 1 else -1 #notre fonction indicatrice
+            for j in range(y.shape[1]):
+                w = np.zeros(len(x[0]))
+                fonction_indicatrice = 1 if y[i, j] == 1 else -1  # notre fonction indicatrice
                 loss += max(0, 2 - fonction_indicatrice * np.dot(w, x[i])) ** 2
 
-
         loss /= x.shape[0]
-        #regularisation
-        nbre= 0.5 * self.C * np.sum(self.w**2)
+        # regularisation
+        nbre = 0.5 * self.C * np.sum(self.w ** 2)
         loss += nbre
-        return loss 
-
-
-
+        return loss
 
     def compute_gradient(self, x, y):
         """
@@ -64,23 +60,23 @@ class SVM:
         """
 
         if len(y.shape) == 1:
-            #Initialisation des paramètres 
+            # Initialisation des paramètres
             self.m = np.max(y) + 1
             y = self.make_one_versus_all_labels(y, self.m)
             self.num_features = x.shape[1]
             self.w = np.zeros([self.num_features, self.m])
-            
+
         gradient = np.zeros_like(self.w)
-        
-        #calcul du gradient avec la formule que l'on a calculé au numéro juste avant, qui sera la dérivée de hinge par rapport à w
+
+        # calcul du gradient avec la formule que l'on a calculé au numéro juste avant, qui sera la dérivée de hinge par rapport à w
         for i in range(len(x)):
             for j in range(y.shape[1]):
-                w= np.zeros(len(x[0]))
-                fonction_indicatrice = 1 if y[i, j] == 1 else -1 #notre fonction indicatrice 
-                #cette formule a été calculé dans la question juste avant 
-                gradient[:, j] += 2 * (2 - np.dot(w, x[i]) * fonction_indicatrice )*(-1*x[i]* fonction_indicatrice)
-                
-        gradient /= len(x)  
+                w = np.zeros(len(x[0]))
+                fonction_indicatrice = 1 if y[i, j] == 1 else -1  # notre fonction indicatrice
+                # cette formule a été calculée dans la question juste avant
+                gradient[:, j] += 2 * (2 - np.dot(w, x[i]) * fonction_indicatrice) * (-1 * x[i] * fonction_indicatrice)
+
+        gradient /= len(x)
 
         return gradient
 
@@ -90,7 +86,6 @@ class SVM:
         n = size
 
         for ndx in range(0, l, n):
-
             index2 = min(ndx + n, l)
 
             yield iterable1[ndx: index2], iterable2[ndx: index2]
@@ -100,7 +95,19 @@ class SVM:
         x : numpy array of shape (num_examples_to_infer, num_features)
         returns : numpy array of shape (num_examples_to_infer, num_classes)
         """
-        pass
+
+        # Scores de chaque classe
+        scores = np.dot(x, self.w)
+
+        # Sélection de l'index de la classe ayant le score le plus élevé
+        predicted_classes = np.argmax(scores, axis=1)
+
+        # Format en one-versus-all
+        y_inferred = -np.ones((x.shape[0], self.m))
+        for i in range(len(predicted_classes)):
+            y_inferred[i, predicted_classes[i]] = 1
+
+        return y_inferred
 
     def compute_accuracy(self, y_inferred, y):
         """
@@ -108,7 +115,12 @@ class SVM:
         y : numpy array of shape (num_examples, num_classes)
         returns : float
         """
-        pass
+
+        correct_predictions = np.sum(np.all(y_inferred == y, axis=1))
+
+        accuracy = correct_predictions / len(y)
+
+        return accuracy
 
     def fit(self, x_train, y_train, x_test, y_test):
         """
@@ -168,21 +180,21 @@ def load_data():
     data_path = "Star_classification/"
     dataset = pd.read_csv(data_path + "star_classification.csv")
     y = dataset['class']
-    x = dataset.drop(['class','rerun_ID'], axis=1)
-    
-    #we replace the dataset class with a number (the class are : 'GALAXY' 'QSO' 'STAR')
+    x = dataset.drop(['class', 'rerun_ID'], axis=1)
+
+    # we replace the dataset class with a number (the class are : 'GALAXY' 'QSO' 'STAR')
     y = y.replace('GALAXY', 0)
     y = y.replace('QSO', 1)
     y = y.replace('STAR', 2)
 
-    #split dataset in train and test
+    # split dataset in train and test
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.4, random_state=40)
 
-    #convert sets to numpy arrays
+    # convert sets to numpy arrays
     x_train = np.array(x_train)
     x_test = np.array(x_test)
     y_train = np.array(y_train)
-    y_test=np.array(y_test)
+    y_test = np.array(y_test)
 
     # normalize the data
     mean = x_train.mean(axis=0)
@@ -198,15 +210,14 @@ def load_data():
 
 
 if __name__ == "__main__":
-
     x_train, y_train, x_test, y_test = load_data()
 
     print("Fitting the model...")
     svm = SVM(eta=0.0001, C=2, niter=200, batch_size=100, verbose=False)
     train_losses, train_accs, test_losses, test_accs = svm.fit(x_train, y_train, x_test, y_test)
 
-    # # to infer after training, do the following:
-    # y_inferred = svm.infer(x_test)
+    # to infer after training, do the following:
+    y_inferred = svm.infer(x_test)
 
     ## to compute the gradient or loss before training, do the following:
     # y_train_ova = svm.make_one_versus_all_labels(y_train, 3) # one-versus-all labels
